@@ -81,6 +81,11 @@ export const LISTENER_CMDS = {
     WINDOW_NDEF_READER_MAKE_READONLY: "WINDOW_NDEF_READER_MAKE_READONLY",
     WINDOW_NDEF_READER_ABORT_SCAN: "WINDOW_NDEF_READER_ABORT_SCAN",
 
+    // App Function SDK functions
+    APP_FUNCTION_RUN: "APP_FUNCTION_RUN",
+    APP_FUNCTION_GET_RUN: "APP_FUNCTION_GET_RUN",
+    APP_FUNCTION_ON_RUN_COMPLETE: "APP_FUNCTION_ON_RUN_COMPLETE",
+
     // Decision table SDK functions
     DECISION_TABLE_EXECUTE: "DECISION_TABLE_EXECUTE",
 
@@ -160,7 +165,8 @@ export const LISTENER_CMDS = {
 export const EVENT_TYPES = {
     COMPONENT_ON_MOUNT: "componentOnMount",
     CC_ON_PARAMS_CHANGE: "onCustomComponentParamsChange",
-    CC_ON_ROUTE_CHANGE: "onCustomComponentRouteChange"
+    CC_ON_ROUTE_CHANGE: "onCustomComponentRouteChange",
+    APP_FUNCTION_RUN_COMPLETE: "onAppFunctionRunComplete"
 };
 
 export const DEFAULTS = {

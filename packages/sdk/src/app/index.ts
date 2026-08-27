@@ -1,4 +1,5 @@
 import { BaseSDK, LISTENER_CMDS } from "../core";
+import { EVENT_TYPES } from "../core/constants";
 import { CreateProxy } from "../core/proxy";
 
 import { Page } from "./page";
@@ -43,6 +44,59 @@ export class Application extends BaseSDK {
 			pageId,
 			pageParams
 		});
+	}
+
+	/**
+	 * Run an App Function by name.
+	 *
+	 * Mode is a property of the function, not of the call, so one method serves
+	 * both: an Interactive function answers with its result, a Background one
+	 * answers as soon as the run is queued and finishes on a worker.
+	 *
+	 *   Interactive -> { RunId, Status: "Success", Result: {…} }
+	 *   Background  -> { RunId, Status: "Queued" }
+	 */
+	runFunction(name: string, parameters?: object) {
+		return this._postMessageAsync(LISTENER_CMDS.APP_FUNCTION_RUN, {
+			name,
+			parameters: parameters ?? {}
+		});
+	}
+
+	/**
+	 * Read a run back — its status, and its output once there is one.
+	 *
+	 * A result can be large, so it is fetched rather than pushed. This is also
+	 * the fallback when a completion is missed: a page that reloads mid-run has
+	 * no listener attached, and the run document is the durable record.
+	 */
+	getRun(runId: string) {
+		return this._postMessageAsync(LISTENER_CMDS.APP_FUNCTION_GET_RUN, {
+			runId
+		});
+	}
+
+	/**
+	 * Be told when a Background run reaches a terminal state.
+	 *
+	 * The callback fires once, with the completed run. Status arrives over a
+	 * push channel; the result itself is fetched, which is why the callback is
+	 * handed the run rather than a bare status. A run that has already finished
+	 * before this is called will not fire — use getRun for that case.
+	 */
+	onRunComplete(runId: string, callBack: (run: any) => any) {
+		this._postMessage(
+			LISTENER_CMDS.APP_FUNCTION_ON_RUN_COMPLETE,
+			{
+				runId,
+				// Scoped per run: two runs in flight must not share a callback.
+				eventName: `${EVENT_TYPES.APP_FUNCTION_RUN_COMPLETE}:${runId}`,
+				eventConfig: {
+					once: true
+				}
+			},
+			callBack
+		);
 	}
 
 	getDecisionTable(flowId: string): DecisionTable {
