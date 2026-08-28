@@ -1,4 +1,4 @@
-import { BaseSDK, LISTENER_CMDS } from "../core";
+import { BaseSDK, globalInstances, LISTENER_CMDS } from "../core";
 import { EVENT_TYPES } from "../core/constants";
 import { CreateProxy } from "../core/proxy";
 
@@ -20,6 +20,11 @@ export class Application extends BaseSDK {
 	constructor(props: AppContext, isCustomComponent: boolean = false) {
 		super();
 		this._id = props.appId;
+		// Registered so the host can address this instance when it pushes an
+		// event back — onRunComplete is delivered that way, and without this the
+		// host resolves globalInstances[target] to undefined and the callback
+		// can never fire. Component does the same for the same reason.
+		globalInstances[this._id] = this;
 		this.page = new Page(props);
 		// /* Note: Synchronous variable read/write is not supported for custom components
 		//  * as it is not possible to use Atomics.wait in the main thread and iframe thread
@@ -88,6 +93,8 @@ export class Application extends BaseSDK {
 		this._postMessage(
 			LISTENER_CMDS.APP_FUNCTION_ON_RUN_COMPLETE,
 			{
+				// The host addresses its reply to this instance.
+				id: this._id,
 				runId,
 				// Scoped per run: two runs in flight must not share a callback.
 				eventName: `${EVENT_TYPES.APP_FUNCTION_RUN_COMPLETE}:${runId}`,
