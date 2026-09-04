@@ -52,7 +52,7 @@ export class Application extends BaseSDK {
 	}
 
 	/**
-	 * Run an App Function by name.
+	 * Run a Custom Function by name.
 	 *
 	 * Mode is a property of the function, not of the call, so one method serves
 	 * both: an Interactive function answers with its result, a Background one
@@ -62,7 +62,7 @@ export class Application extends BaseSDK {
 	 *   Background  -> { RunId, Status: "Queued" }
 	 */
 	runFunction(name: string, parameters?: object) {
-		return this._postMessageAsync(LISTENER_CMDS.APP_FUNCTION_RUN, {
+		return this._postMessageAsync(LISTENER_CMDS.CUSTOM_FUNCTION_RUN, {
 			name,
 			parameters: parameters ?? {}
 		});
@@ -76,7 +76,7 @@ export class Application extends BaseSDK {
 	 * no listener attached, and the run document is the durable record.
 	 */
 	getRun(runId: string) {
-		return this._postMessageAsync(LISTENER_CMDS.APP_FUNCTION_GET_RUN, {
+		return this._postMessageAsync(LISTENER_CMDS.CUSTOM_FUNCTION_GET_RUN, {
 			runId
 		});
 	}
@@ -91,13 +91,13 @@ export class Application extends BaseSDK {
 	 */
 	onRunComplete(runId: string, callBack: (run: any) => any) {
 		this._postMessage(
-			LISTENER_CMDS.APP_FUNCTION_ON_RUN_COMPLETE,
+			LISTENER_CMDS.CUSTOM_FUNCTION_ON_RUN_COMPLETE,
 			{
 				// The host addresses its reply to this instance.
 				id: this._id,
 				runId,
 				// Scoped per run: two runs in flight must not share a callback.
-				eventName: `${EVENT_TYPES.APP_FUNCTION_RUN_COMPLETE}:${runId}`,
+				eventName: `${EVENT_TYPES.CUSTOM_FUNCTION_RUN_COMPLETE}:${runId}`,
 				eventConfig: {
 					once: true
 				}
