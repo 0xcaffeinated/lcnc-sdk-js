@@ -20,10 +20,6 @@ export class Application extends BaseSDK {
 	constructor(props: AppContext, isCustomComponent: boolean = false) {
 		super();
 		this._id = props.appId;
-		// Registered so the host can address this instance when it pushes an
-		// event back — onRunComplete is delivered that way, and without this the
-		// host resolves globalInstances[target] to undefined and the callback
-		// can never fire. Component does the same for the same reason.
 		globalInstances[this._id] = this;
 		this.page = new Page(props);
 		// /* Note: Synchronous variable read/write is not supported for custom components
@@ -51,16 +47,6 @@ export class Application extends BaseSDK {
 		});
 	}
 
-	/**
-	 * Run a Custom Function by name.
-	 *
-	 * Mode is a property of the function, not of the call, so one method serves
-	 * both: an Interactive function answers with its result, a Background one
-	 * answers as soon as the run is queued and finishes on a worker.
-	 *
-	 *   Interactive -> { RunId, Status: "Success", Result: {…} }
-	 *   Background  -> { RunId, Status: "Queued" }
-	 */
 	runFunction(name: string, parameters?: object) {
 		return this._postMessageAsync(LISTENER_CMDS.CUSTOM_FUNCTION_RUN, {
 			name,
@@ -68,35 +54,18 @@ export class Application extends BaseSDK {
 		});
 	}
 
-	/**
-	 * Read a run back — its status, and its output once there is one.
-	 *
-	 * A result can be large, so it is fetched rather than pushed. This is also
-	 * the fallback when a completion is missed: a page that reloads mid-run has
-	 * no listener attached, and the run document is the durable record.
-	 */
 	getRun(runId: string) {
 		return this._postMessageAsync(LISTENER_CMDS.CUSTOM_FUNCTION_GET_RUN, {
 			runId
 		});
 	}
 
-	/**
-	 * Be told when a Background run reaches a terminal state.
-	 *
-	 * The callback fires once, with the completed run. Status arrives over a
-	 * push channel; the result itself is fetched, which is why the callback is
-	 * handed the run rather than a bare status. A run that has already finished
-	 * before this is called will not fire — use getRun for that case.
-	 */
 	onRunComplete(runId: string, callBack: (run: any) => any) {
 		this._postMessage(
 			LISTENER_CMDS.CUSTOM_FUNCTION_ON_RUN_COMPLETE,
 			{
-				// The host addresses its reply to this instance.
 				id: this._id,
 				runId,
-				// Scoped per run: two runs in flight must not share a callback.
 				eventName: `${EVENT_TYPES.CUSTOM_FUNCTION_RUN_COMPLETE}:${runId}`,
 				eventConfig: {
 					once: true
